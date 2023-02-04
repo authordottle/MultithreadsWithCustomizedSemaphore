@@ -1,11 +1,5 @@
 /********* randomize.c ***********/
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <time.h>
+#include "headers.h"
 
 // swap strings
 void swap (char *a, char *b) {

@@ -8,19 +8,21 @@ void *consumer(void *args) {
     
     // Read data
     while (1) {
-        // sem_wait(&full);
-        // sem_wait(&mutex);
-
-        // get an item from buffer
-        elem = ptr->buffer[ptr->out];
-
-        // printf("%c\t%d", elem.color, elem.timestamp);  
-        fprintf(fd, "%s %s", elem.color, elem.timestamp);      
-        // sem_post(&mutex);
-        // sem_post(&empty);
+        pthread_mutex_lock(&mutex);
         
-        // if (elem.id == -1) break;
-
+        // get an item from buffer and print into consumer txt
+        elem = ptr->buffer[ptr->out]; 
+        fprintf(fd, "%s %s", elem.color, elem.timestamp);  
         ptr->out = (ptr->out + 1) % BUFFER_SIZE;
+
+        // printf("%c\t%d", elem.color, elem.timestamp); 
+
+        // TODO: BUFFER
+        // while (ptr->out == 0) {
+        //     pthread_cond_wait(&condc, &mutex);    
+        // }  
+
+        pthread_cond_signal(&condp);
+        pthread_mutex_unlock(&mutex);        
     }
 }

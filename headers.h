@@ -37,7 +37,22 @@ void *randomize(char *array, int n);        // shuffle function using Fisher–Y
 void *producer(void *args);         // producer thread
 void *consumer(void *args);         // consumer thread
 
-// sem_t empty;
-// sem_t full;
-// sem_t mutex;
+// typedef int semaphore;
+// semaphore empty = BUFFER_SIZE;      // counts empty buffer slots
+// semaphore full = 0;                 // counts full buffer slots
+// semaphore mutex = 1;                // controls access to critical region
 
+typedef int Mutex;
+typedef int Cond;
+typedef struct {
+    int value;      // value for semaphore
+    int counter;    // counter
+    Mutex *mutex;   // pthread_mutex
+    Cond *condition;// pthread_condition variable
+} semaphore;
+
+// set of thread attributes, mutex, condp and condc
+pthread_attr_t attr;            
+pthread_mutex_t mutex;          
+pthread_cond_t condp;                 
+pthread_cond_t condc; 

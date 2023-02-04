@@ -28,23 +28,6 @@ int main() {
     ptr->in = 0;
     ptr->out = 0;
 
-    // initialize semaphores
-    // if (sem_init(&mutex, 0, 1) == -1) {
-    //     printf("Initilize semaphore failed\n");
-    //     exit(-1);
-    // }
-    // if (sem_init(&empty, 0, BUFFER_SIZE) == -1) {
-    //     printf("Initilize semaphore failed\n");
-    //     exit(-1);
-    // }
-    // if (sem_init(&full, 0, 0) == -1) {
-    //     printf("Initilize semaphore failed\n");
-    //     exit(-1);
-    // }
-    // sem_init(&empty, 0, BUFFER_SIZE); 
-    // sem_init(&full, 0, 0);
-    // sem_init(&mutex, 0, 1);
-
     // initialize pthread args
     pthread_args *p_r_args = (pthread_args *) malloc(sizeof(pthread_args));
     p_r_args->ptr = ptr;
@@ -63,18 +46,11 @@ int main() {
     c_args->fd = consumer_colors;
     c_args->color = NULL;
 
-    pthread_attr_t attr;            // set of thread attributes
-    pthread_attr_init(&attr);       // get the default attributes
+    // producer and consumer thread identifiers
+    pthread_t producer_t[PRODUCER_NUM]; 
+    pthread_t consumer_t[CONSUMER_NUM];
 
-    pthread_t producer_t[PRODUCER_NUM]; // producer thread identifiers
-    pthread_t consumer_t[CONSUMER_NUM]; // consumer thread identifiers
-
-
-    // // Each producer deposits its item into the buffer, 
-    // // and the consumer retrieves the items from the buffer. 
-    // // The items produced by the producers will be of any of the three strings below:
-    // // “RED timestamp”, “BLACK timestamp”, “WHITE timestamp”
-
+    // producers assigned any of 3 color randomly
     char *color_arr[3];
     color_arr[0] = COLOR_RED;
     color_arr[1] = COLOR_BLK;
@@ -105,24 +81,50 @@ int main() {
     for (int i = 0; i < CONSUMER_NUM; i++) {
         pthread_join(consumer_t[i], NULL);
     } 
-   
-    // // destroy semaphores
-    // // sem_destroy(&mutex);
-    // // sem_destroy(&empty);
-    // // sem_destroy(&full);
     
-    // // close open files
-    // fclose(producer_red);
-    // fclose(producer_blk);
-    // fclose(producer_white);
-    // fclose(consumer_colors);
+    // initialize semaphores
+    // TODO
+    semaphore *semaphore = initialize(BUFFER_SIZE);
 
-    // // free
-    // free(p_r_args);
-    // free(p_b_args);
-    // free(p_w_args);
-    // free(c_args);
-    // free(ptr);
+    // if (sem_init(&mutex, 0, 1) == -1) {
+    //     printf("Initilize semaphore failed\n");
+    //     exit(-1);
+    // }
+    // if (sem_init(&empty, 0, BUFFER_SIZE) == -1) {
+    //     printf("Initilize semaphore failed\n");
+    //     exit(-1);
+    // }
+    // if (sem_init(&full, 0, 0) == -1) {
+    //     printf("Initilize semaphore failed\n");
+    //     exit(-1);
+    // }
+    // sem_init(&empty, 0, BUFFER_SIZE); 
+    // sem_init(&full, 0, 0);
+    // sem_init(&mutex, 0, 1);
+
+    // get the default attributes, mutex, condp, condc
+    pthread_attr_init(&attr);       
+    pthread_mutex_init(&mutex, &attr);       
+    pthread_cond_init(&condp, &attr);
+    pthread_cond_init(&condp, &attr);
+   
+    // destroy mutex and cond
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&condp);
+    pthread_cond_destroy(&condc);
+    
+    // close open files
+    fclose(producer_red);
+    fclose(producer_blk);
+    fclose(producer_white);
+    fclose(consumer_colors);
+
+    // free
+    free(p_r_args);
+    free(p_b_args);
+    free(p_w_args);
+    free(c_args);
+    free(ptr);
 
     exit(0);
 }

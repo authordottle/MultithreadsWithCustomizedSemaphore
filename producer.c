@@ -10,10 +10,8 @@ void *producer(void *args) {
     int id  = 0;
     int end = 0;
 
-    while (1) {
-        // elem.id = id++;        
-        // sem_wait(&empty);
-        // sem_wait(&mutex);
+    while (1) {     
+        pthread_mutex_lock(&mutex);
 
         // create a specific colored item and timestamp
         struct timeval current_time;
@@ -24,12 +22,17 @@ void *producer(void *args) {
 
         // put an item in buffer
         ptr->buffer[ptr->in] = elem;
-
         ptr->in = (ptr->in + 1) % BUFFER_SIZE;
 
-        // if there is no more data to be read from the file
-        // sem_post(&mutex);
-        // sem_post(&full);
+        // TODO:
+        // while (ptr->in != 0) {
+        //     pthread_cond_wait(&condp, &mutex);    
+        // }
+
+        // if there is no more data to be read from the 
+        // wake up consumer and release it to access buffer
+        pthread_cond_signal(&condc);
+        pthread_mutex_unlock(&mutex);
 
         if (end) break;        
     }
