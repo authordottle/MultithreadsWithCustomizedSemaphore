@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/time.h>
+#include <sys/time.h> // forgettimeofday()
 // #include <semaphore.h>
 
 #define BUFFER_SIZE 2
@@ -44,9 +44,10 @@ typedef struct {
 } semaphore;
 
 // functions
-
-// other variables
-pthread_attr_t attr;  
+void mutex_lock(mutex *mutex);
+void mutex_unlock(mutex *mutex);
+void _wait(semaphore *sem);
+void _signal(semaphore *sem);
 
 // thread arguments 
 typedef struct {

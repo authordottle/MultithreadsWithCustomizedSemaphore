@@ -73,7 +73,7 @@ int main() {
     pthread_t producer_t[PRODUCER_NUM]; 
     pthread_t consumer_t[CONSUMER_NUM];
 
-    // producers assigned any of 3 color randomly
+    // producers assigned color randomly
     char *color_arr[] = {COLOR_RED, COLOR_BLK, COLOR_WHITE};
     for (int i = 0; i < 2; i++) {
         struct timeval current_time;
@@ -87,18 +87,24 @@ int main() {
         color_arr[i] = t;
     }
 
+    pthread_attr_t attr;  
+
     // create producer and consumer threads 
     for (int i = 0; i < PRODUCER_NUM; i++) {
         if (strcmp(color_arr[i], COLOR_RED) == 0) {
             pthread_create(&(producer_t[i]), &attr, producer, p_r_args);
+            printf("Producer RED is created.\n");
         } else if (strcmp(color_arr[i], COLOR_BLK) == 0) {
             pthread_create(&(producer_t[i]), &attr, producer, p_b_args);
+            printf("Producer BLK is created.\n");
         } else if (strcmp(color_arr[i], COLOR_WHITE) == 0) {
             pthread_create(&(producer_t[i]), &attr, producer, p_w_args);
+            printf("Producer WHITE is created.\n");
         }
     } 
     for (int i = 0; i < CONSUMER_NUM; i++) {
         pthread_create(&(consumer_t[i]), &attr, consumer, c_args);
+        printf("Consumer is created.\n");
     } 
 
     // wait for working threads

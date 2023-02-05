@@ -7,6 +7,8 @@ void *consumer(void *args) {
     semaphore *sem = ((pthread_args *) args)->sem;
     item elem;
     
+    printf("Consumer is here.\n");
+
     // Read data
     while (1) {
         // TODO

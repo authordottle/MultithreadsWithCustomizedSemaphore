@@ -1,12 +1,24 @@
 /********* semaphore.c ***********/
 #include "headers.h"
 
-void sem_wait(semaphore *sem) {
-  int mutex_lock = pthread_mutex_lock(sem->mutex);
-  if (mutex_lock != 0) {
+void mutex_lock(mutex *mutex) {
+  int n = pthread_mutex_lock(mutex);
+  if (n != 0) {
     perror("lock failed");
     exit(-1);
   }
+}
+
+void mutex_unlock(mutex *mutex) {
+  int n = pthread_mutex_unlock(mutex);
+  if (n != 0) {
+    perror("unlock failed");
+    exit(-1);
+  }
+}
+
+void _wait(semaphore *sem) {
+  mutex_lock(sem->mutex);
   sem->value --;
 
   if (sem->value < 0) {
@@ -19,19 +31,11 @@ void sem_wait(semaphore *sem) {
     } while(sem->counter < 1);   
     sem->counter --;
   }
-  int mutex_unlock = pthread_mutex_unlock(sem->mutex);
-  if (mutex_unlock != 0) {
-    perror("unlock failed");
-    exit(-1);
-  }
+  mutex_unlock(sem->mutex);
 }
 
-void sem_signal(semaphore *sem) {
-  int mutex_lock = pthread_mutex_lock(sem->mutex);
-  if (mutex_lock != 0) {
-    perror("lock failed");
-    exit(-1);
-  }
+void _signal(semaphore *sem) {
+  mutex_lock(sem->mutex);
   sem->value ++;
 
   if (sem->value <= 0) {
@@ -42,9 +46,5 @@ void sem_signal(semaphore *sem) {
       exit(-1);
     }
   }
-  int mutex_unlock = pthread_mutex_unlock(sem->mutex);
-  if (mutex_unlock != 0) {
-    perror("unlock failed");
-    exit(-1);
-  }
+  mutex_unlock(sem->mutex);
 }
