@@ -16,53 +16,58 @@
 #define ITEM_NUM 1000
 
 // item printed in buffer and producer and consumer files
-typedef struct {
-	char *color;                	 
-	int timestamp;  	 
+typedef struct
+{
+	char *color;
+	int timestamp;
 } item;
 
-// functions
-item produce_item(char *color); // create a specific colored item and timestamp
-
 // buffer with shared variable in for producer and out for consumer
-typedef struct {
-	int in;                   	 
-	int out;                 	 
-	item buffer[BUFFER_SIZE];    
+typedef struct
+{
+	int in;
+	int out;
+	item buffer[BUFFER_SIZE];
+	int occupied_slots;
+	int available_slots;
+	int countdown;
+	int done;
+	int prod_state_ready;
+	int cons_state_ready;
 } shared_struct;
 
-// functions                       	 
-void *producer(void *args);             	// producer thread
-void *consumer(void *args);             	// consumer thread
+// thread arguments
+typedef struct
+{
+	shared_struct *ptr; // shared by producer threads and consumer threads
+	FILE *fd;			// file descriptor of output file
+	char *color;
+} pthread_args;
 
 // semaphore
 typedef pthread_mutex_t mutex;
 typedef pthread_cond_t cond;
 
-typedef struct {
-	int value;      	// value for semaphore
-	int counter;    	// # of pending signals        	 
-	mutex *mutex;   	// lock and unlock, controls access to critical region
-	cond *cond;     	//
+typedef struct
+{
+	int value;	  // value for semaphore
+	int counter;  // # of pending signals
+	mutex *mutex; // lock and unlock, controls access to critical region
+	cond *cond;	  //
 } semaphore;
 
 // variables shared by all threads; mutable
-static semaphore *global_sem;
-static int full;
-static int empty;
-static int countdown;
-static int end;
+static semaphore *sem;
 
 // functions
-semaphore *initialize();
+item produce_item(char *color); // create a specific colored item and timestamp
+void *producer(void *args); // producer thread
+void *consumer(void *args); // consumer thread
+semaphore *initialize_sem(int value);
+void cond_wait(cond *cond, mutex *mutex);
+void cond_signal(cond *cond);
+void cond_broadcast(cond *cond);
 void mutex_lock(mutex *mutex);
 void mutex_unlock(mutex *mutex);
-void sem_wait(semaphore *sem);
-void sem_signal(semaphore *sem);
-
-// thread arguments
-typedef struct {
-	shared_struct *ptr; 	// shared by producer threads and consumer threads
-	FILE *fd;           	// file descriptor of output file
-	char *color;
-} pthread_args;
+// void sem_wait(semaphore *sem);
+// void sem_signal(semaphore *sem);
