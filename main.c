@@ -1,10 +1,40 @@
 /********* main.c ***********/
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include "headers.h"
 #include "producer_consumer.c"
 #include "semaphore.c"
 
 int main()
 {
+
+	int shmid = shmget(SHM_KEY, BUFFER_SIZE * sizeof(char *), 0644 | IPC_CREAT);
+	if (shmid == -1)
+	{
+		perror("shared memory id");
+		exit(-1);
+	}
+
+	// attach to the segment to get a pointer to it.
+	char *shm_pointer = (char *)shmat(shmid, NULL, 0);
+	if (shm_pointer == (void *)-1)
+	{
+		perror("shared memory attach");
+		exit(-1);
+	}
+
+	// initialize bounded buffer
+	shared_struct *ptr = (shared_struct *)malloc(sizeof(shared_struct));
+	ptr->in = 0;
+	ptr->out = 0;
+	ptr->occupied_slots = 0;
+	ptr->available_slots = BUFFER_SIZE;
+	ptr->countdown = ITEM_NUM * PRODUCER_NUM;
+	ptr->done = 0;
+	ptr->prod_state_ready = 1;
+	ptr->cons_state_ready = 0;
+	ptr->shm_pointer = shm_pointer;
+
 	// prepare and open txt files
 	FILE *producer_red = fopen("Producer_RED.txt", "w");
 	FILE *producer_blk = fopen("Producer_BLACK.txt", "w");
@@ -33,17 +63,6 @@ int main()
 
 	// global variable assigned values
 	sem = initialize_sem(1);
-
-	// initialize bounded buffer
-	shared_struct *ptr = (shared_struct *)malloc(sizeof(shared_struct));
-	ptr->in = 0;
-	ptr->out = 0;
-	ptr->occupied_slots = 0;
-	ptr->available_slots = BUFFER_SIZE;
-	ptr->countdown = ITEM_NUM * PRODUCER_NUM;
-	ptr->done = 0;
-	ptr->prod_state_ready = 1;
-	ptr->cons_state_ready = 0;
 
 	// initialize pthread argsm
 	pthread_args *p_r_args = (pthread_args *)malloc(sizeof(pthread_args));

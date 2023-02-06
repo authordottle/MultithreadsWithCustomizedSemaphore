@@ -4,7 +4,7 @@
 
 mutex *initialize_mutex()
 {
-	mutex *sem_mutex = (mutex *) malloc(sizeof(mutex));
+	mutex *sem_mutex = (mutex *)malloc(sizeof(mutex));
 	int make_mutex = pthread_mutex_init(sem_mutex, NULL);
 	if (make_mutex != 0)
 	{
@@ -17,7 +17,7 @@ mutex *initialize_mutex()
 
 cond *initialize_cond()
 {
-	cond *sem_cond = (cond *) malloc(sizeof(cond));
+	cond *sem_cond = (cond *)malloc(sizeof(cond));
 	int make_cond = pthread_cond_init(sem_cond, NULL);
 	if (make_cond != 0)
 	{
@@ -89,40 +89,51 @@ semaphore *initialize_sem(int value)
 	return sem;
 }
 
-// void sem_wait(semaphore *sem) {
-// 	// lock before changing value
-// 	// printf("wait call on pthread id? %ld\n", pthread_self());
-// 	mutex_lock(sem->mutex);
-// 	sem->value --;
+void sem_wait(semaphore *sem, shared_struct *ptr, char *client)
+{
+	mutex_lock(sem->mutex);
+	
+	if (client == PRODUCER)
+	{
+		while (ptr->occupied_slots == BUFFER_SIZE && !ptr->prod_state_ready)
+		{
+			cond_wait(sem->cond, sem->mutex);
+		}
+	}
+	else if (client == CONSUMER)
+	{
+		while (ptr->available_slots == BUFFER_SIZE && !ptr->cons_state_ready)
+		{
+			cond_wait(sem->cond, sem->mutex);
+		}
+	}
+}
 
-// 	// negative value means threads are waiting so that while no pending signals busy waiting condition
-// 	if (sem->value < 0) {
-// 		do {
-// 			int n = pthread_cond_timedwait(sem->cond, sem->mutex, 100);
-// 			if (n != 0) {
-// 				perror("pthread_cond_timedwait failed");
-// 				exit(-1);
-// 			}
-// 		} while(sem->counter < 1);
-// 		sem->counter --;
-// 	}
-// 	mutex_unlock(sem->mutex);
-// }
+void sem_signal(semaphore *sem, shared_struct *ptr, char *client)
+{
+	if (client == PRODUCER)
+	{
+		// if there is no more space in buffer
+		// wake up consumer and release the lock to access buffer
+		if ((ptr->occupied_slots) == BUFFER_SIZE && (ptr->available_slots) == 0)
+		{
+			ptr->prod_state_ready = 0;
+			ptr->cons_state_ready = 1;
+			// printf("Producer %ld will let consumer go. \n", pthread_self());
+		}
+	}
+	else if (client == CONSUMER)
+	{
+		// if there is no more data to be read from buffer
+		// wake up producer and release the lock to access buffer
+		if ((ptr->available_slots) == BUFFER_SIZE && (ptr->occupied_slots) == 0)
+		{
+			ptr->cons_state_ready = 0;
+			ptr->prod_state_ready = 1;
+			// printf("Consumer %ld will let one producer go. \n", pthread_self());
+		}
+	}
 
-// void sem_signal(semaphore *sem) {
-//   // lock before changing value
-//   // printf("signal call on pthread id? %ld\n", pthread_self());
-//   mutex_lock(sem->mutex);
-//   sem->value ++;
-
-//   // negative value means threads are waiting so that increase # of pending signals and signals condition
-//   if (sem->value <= 0) {
-// 	sem->counter ++;
-// 	int n = pthread_cond_signal(sem->cond);
-// 	if (n != 0) {
-// 		perror("pthread_cond_signal failed");
-// 		exit(-1);
-// 	}
-//   }
-//   mutex_unlock(sem->mutex);
-// }
+	cond_broadcast(sem->cond);
+	mutex_unlock(sem->mutex);
+}
