@@ -17,46 +17,52 @@
 
 // item printed in buffer and producer and consumer files
 typedef struct {
-    char color;                     
-    int timestamp;       
+	char *color;                	 
+	int timestamp;  	 
 } item;
 
-// buffer with shared variable in and out
+// functions
+item produce_item(char *color); // create a specific colored item and timestamp
+
+// buffer with shared variable in for producer and out for consumer
 typedef struct {
-    int in;                        
-    int out;                      
-    item buffer[BUFFER_SIZE];    
+	int in;                   	 
+	int out;                 	 
+	item buffer[BUFFER_SIZE];    
 } shared_struct;
 
-// functions                            
-void *producer(void *args);                                             // producer thread
-void *consumer(void *args);                                             // consumer thread
+// functions                       	 
+void *producer(void *args);             	// producer thread
+void *consumer(void *args);             	// consumer thread
 
 // semaphore
 typedef pthread_mutex_t mutex;
 typedef pthread_cond_t cond;
 
 typedef struct {
-    int value;          // value for semaphore
-    int counter;        // counter/wakeups             
-    mutex *mutex;       // pthread_mutex variable; controls access to critical region
-    cond *cond;         // pthread_condition variable
+	int value;      	// value for semaphore
+	int counter;    	// # of pending signals        	 
+	mutex *mutex;   	// lock and unlock, controls access to critical region
+	cond *cond;     	//
 } semaphore;
 
+// variables shared by all threads; mutable
+static semaphore *global_sem;
+static int full;
+static int empty;
+static int countdown;
+static int end;
+
 // functions
+semaphore *initialize();
 void mutex_lock(mutex *mutex);
 void mutex_unlock(mutex *mutex);
-void _wait(semaphore *sem);
-void _signal(semaphore *sem);
+void sem_wait(semaphore *sem);
+void sem_signal(semaphore *sem);
 
-// thread arguments 
+// thread arguments
 typedef struct {
-    shared_struct *ptr;             // shared by producer threads and consumer threads
-    FILE *fd;                       // file descriptor of output file
-    char color;
-    semaphore *sem;
+	shared_struct *ptr; 	// shared by producer threads and consumer threads
+	FILE *fd;           	// file descriptor of output file
+	char *color;
 } pthread_args;
-
-// TODO
-// semaphore empty = BUFFER_SIZE;      // counts empty buffer slots
-// semaphore full = 0;                 // counts full buffer slots

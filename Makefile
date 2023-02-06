@@ -1,2 +1,2 @@
 all:
-	gcc -o test main.c producer.c consumer.c -lpthread
+	gcc -o main main.c -lpthread
