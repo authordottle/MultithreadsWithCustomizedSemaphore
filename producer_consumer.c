@@ -14,12 +14,6 @@ shared_struct *update_shared_struct(item elem, shared_struct *ptr)
 
 void store_item(item elem, shared_struct *ptr, FILE *fd)
 {
-	struct shmseg *buffer_pointer = &ptr->shm_pointer;
-	// char str[50];
-	// sprintf(str, "%s %d", elem.color, elem.timestamp);
-	// memset(buffer_pointer->buf, str, 50);
-	// printf("segment contains : \n\"%s\"\n", str);
-	// printf("segment contains : \n\"%s\"\n", buffer_pointer->buf);
 	fprintf(fd, "%s %d\n", elem.color, elem.timestamp);
 }
 

@@ -4,6 +4,9 @@
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
 #include <sys/time.h> // forgettimeofday()
 // #include <semaphore.h>
 
@@ -25,16 +28,10 @@ typedef struct
 	int timestamp;
 } item;
 
-struct shmseg {
-   int cnt;
-   int complete;
-   char buf[BUFFER_SIZE];
-};
-
 // buffer with shared variable in for producer and out for consumer
 typedef struct
 {
-	struct shmseg shm_pointer; 
+	// char *shm_pointer; 
 	int in;
 	int out;
 	item buffer[BUFFER_SIZE];

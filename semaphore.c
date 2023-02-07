@@ -93,14 +93,14 @@ void sem_wait(semaphore *sem, shared_struct *ptr, char *client)
 {
 	mutex_lock(sem->mutex);
 	
-	if (client == PRODUCER)
+	if (strcmp(client, PRODUCER) == 0)
 	{
 		while (ptr->occupied_slots == BUFFER_SIZE && !ptr->prod_state_ready)
 		{
 			cond_wait(sem->cond, sem->mutex);
 		}
 	}
-	else if (client == CONSUMER)
+	else if (strcmp(client, CONSUMER) == 0)
 	{
 		while (ptr->available_slots == BUFFER_SIZE && !ptr->cons_state_ready)
 		{
@@ -111,7 +111,7 @@ void sem_wait(semaphore *sem, shared_struct *ptr, char *client)
 
 void sem_signal(semaphore *sem, shared_struct *ptr, char *client)
 {
-	if (client == PRODUCER)
+	if (strcmp(client, PRODUCER) == 0)
 	{
 		// if there is no more space in buffer
 		// wake up consumer and release the lock to access buffer
@@ -122,7 +122,7 @@ void sem_signal(semaphore *sem, shared_struct *ptr, char *client)
 			// printf("Producer %ld will let consumer go. \n", pthread_self());
 		}
 	}
-	else if (client == CONSUMER)
+	else if (strcmp(client, CONSUMER) == 0)
 	{
 		// if there is no more data to be read from buffer
 		// wake up producer and release the lock to access buffer
