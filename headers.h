@@ -4,9 +4,13 @@
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
 #include <sys/time.h> // forgettimeofday()
 // #include <semaphore.h>
 
+#define SHM_KEY 12345
 #define BUFFER_SIZE 2
 #define PRODUCER_NUM 3
 #define CONSUMER_NUM 1
@@ -14,6 +18,8 @@
 #define COLOR_BLK "BLACK"
 #define COLOR_WHITE "WHITE"
 #define ITEM_NUM 1000
+#define PRODUCER "PRODUCER"
+#define CONSUMER "CONSUMER"
 
 // item printed in buffer and producer and consumer files
 typedef struct
@@ -25,6 +31,7 @@ typedef struct
 // buffer with shared variable in for producer and out for consumer
 typedef struct
 {
+	// char *shm_pointer; 
 	int in;
 	int out;
 	item buffer[BUFFER_SIZE];
@@ -69,5 +76,5 @@ void cond_signal(cond *cond);
 void cond_broadcast(cond *cond);
 void mutex_lock(mutex *mutex);
 void mutex_unlock(mutex *mutex);
-// void sem_wait(semaphore *sem);
-// void sem_signal(semaphore *sem);
+void sem_wait(semaphore *sem, shared_struct *ptr, char *client);
+void sem_signal(semaphore *sem, shared_struct *ptr, char *client);

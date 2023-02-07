@@ -12,7 +12,7 @@ shared_struct *update_shared_struct(item elem, shared_struct *ptr)
 	return ptr;
 }
 
-void store_item(item elem, FILE *fd) 
+void store_item(item elem, shared_struct *ptr, FILE *fd)
 {
 	fprintf(fd, "%s %d\n", elem.color, elem.timestamp);
 }
@@ -25,9 +25,9 @@ item produce_item(char *color)
 	int timestamp = current_time.tv_usec;
 	elem.timestamp = timestamp;
 	elem.color = color;
-	
+
 	printf("producer_consumer.c: Producer %s generates %s %d. \n", color, elem.color, elem.timestamp);
-	
+
 	return elem;
 }
 
@@ -40,31 +40,15 @@ void *producer(void *args)
 	printf("producer_consumer.c: Producer %ld %s is here. \n", pthread_self(), color);
 	for (int i = 1; i <= ITEM_NUM; i++)
 	{
-		mutex_lock(sem->mutex);
-		while (ptr->occupied_slots == BUFFER_SIZE && !ptr->prod_state_ready)
-		{
-			cond_wait(sem->cond, sem->mutex);
-			// printf("Producer %ld is waiting. \n", pthread_self());
-		}
-		// printf("Producer %ld %s is on. \n", pthread_self(), color);
+		sem_wait(sem, ptr, PRODUCER);
 
 		// critical region
 		// put an item in buffer and producer file
 		item elem = produce_item(color);
-		store_item(elem, fd);
 		ptr = update_shared_struct(elem, ptr);
+		store_item(elem, ptr, fd);
 
-		// if there is no more space in buffer
-		// wake up consumer and release the lock to access buffer
-		if ((ptr->occupied_slots) == BUFFER_SIZE && (ptr->available_slots) == 0)
-		{
-			ptr->prod_state_ready = 0;
-			ptr->cons_state_ready = 1;
-			// printf("Producer %ld will let consumer go. \n", pthread_self());
-		}
-
-		cond_broadcast(sem->cond);
-		mutex_unlock(sem->mutex);
+		sem_signal(sem, ptr, PRODUCER);
 	}
 
 	printf("Producer %ld is done. \n", pthread_self());
@@ -81,14 +65,7 @@ void *consumer(void *args)
 
 	while (ptr->countdown != 0)
 	{
-		// buffer is empty
-		mutex_lock(sem->mutex);
-		while (ptr->available_slots == BUFFER_SIZE && !ptr->cons_state_ready)
-		{
-			cond_wait(sem->cond, sem->mutex);
-			// printf("Consumer %ld is waiting. \n", pthread_self());
-		}
-		// printf("Cons %ld is on.\n", pthread_self());
+		sem_wait(sem, ptr, CONSUMER);
 
 		// critical region
 		// get an item from buffer and print into consumer txt
@@ -100,19 +77,8 @@ void *consumer(void *args)
 		ptr->available_slots++;
 		ptr->countdown--;
 
-		// if there is no more data to be read from buffer
-		// wake up producer and release the lock to access buffer
-		if ((ptr->available_slots) == BUFFER_SIZE)
-		{
-			ptr->cons_state_ready = 0;
-			ptr->prod_state_ready = 1;
-			printf("Consumer %ld will let one producer go. \n", pthread_self());
-		}
-		
-		cond_broadcast(sem->cond);
-		mutex_unlock(sem->mutex);
+		sem_signal(sem, ptr, CONSUMER);
 	}
-
 	printf("Consumer %ld is done. \n", pthread_self());
 	pthread_exit(NULL);
 }
