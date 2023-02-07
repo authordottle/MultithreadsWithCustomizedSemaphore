@@ -3,6 +3,7 @@ Author: Jiaqian Huang
 Objectives:
 1. Acquire familiarity with using POSIX thread management primitives. 
 2. How to write POSIX thread programs and communicate through shared memory. 
+(Since this proj is not required to use shared memory, all codes related to shared memory are commented. )
 
 Problem Statement:
 Write a POSIX program. 
