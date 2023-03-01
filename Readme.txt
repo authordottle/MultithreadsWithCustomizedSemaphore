@@ -32,3 +32,6 @@ How to run the code:
 3. run `$ make`
 4. run `./main`
 5. then the programming is executed and printing items into 4 txt files.
+
+Grade:
+Received the full score
